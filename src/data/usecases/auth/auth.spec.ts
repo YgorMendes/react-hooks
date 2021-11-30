@@ -1,30 +1,27 @@
-interface HttpPostClient {
-  post(url: string): Promise<void>;
-}
+import { HttpPostClientSpy } from "../../test/mock-http-client";
+import { Auth } from "./auth";
 
-class Auth {
-  constructor(
-    private readonly url: string,
-    private readonly HttpPostClient: HttpPostClient
-  ) {}
-  async auth(): Promise<void> {
-    await this.HttpPostClient.post(this.url);
-  }
-}
+type SutTypes = {
+  sut: Auth;
+  httpPostClientSpy: HttpPostClientSpy;
+};
+
+const makeSut = (url: string = "any_url"): SutTypes => {
+  const httpPostClientSpy = new HttpPostClientSpy();
+  const sut = new Auth(url, httpPostClientSpy);
+
+  return {
+    sut,
+    httpPostClientSpy,
+  };
+};
 
 describe("Auth", () => {
   test("Shoud call httpPostClient with correct URL", async () => {
-    class HttpPostClientSpy implements HttpPostClient {
-      url?: string;
-      async post(url: string): Promise<void> {
-        this.url = url;
-      }
-    }
+    const url = "other_url";
+    const { httpPostClientSpy, sut } = makeSut(url);
 
-    const url = "any_url";
-    const httpPostClient = new HttpPostClientSpy();
-    const sut = new Auth(url, httpPostClient);
     await sut.auth();
-    expect(httpPostClient.url).toBe(url);
+    expect(httpPostClientSpy.url).toBe(url);
   });
 });
